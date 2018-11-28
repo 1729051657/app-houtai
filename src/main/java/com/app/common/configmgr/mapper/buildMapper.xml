@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper 
+       PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+       "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="buildMapper">
+	 <select id="getList"  resultType="com.common.configmgr.pojo.Build" parameterType="com.common.configmgr.pojo.Build">
+		SELECT cb.* , cd.build_id FROM `comm_build` cb,comm_build_attribute cd WHERE cb.id = cd.build_id AND cb.active = 1
+		<if test="hasChild==-1">
+			and cb.hasChild =0
+		</if>
+		<if test="bloc_id>0">
+		 	and cb.bloc_id =#{bloc_id} or cb.bloc_id is null
+		 </if>
+		 <if test="build_id>0">
+		 	and build_id=#{build_id}
+		 </if>
+    </select>  
+    <!-- 建筑 -->
+    <select id="getBuildAttribute"  resultType="com.common.configmgr.pojo.BuildAttribute" parameterType="com.common.configmgr.pojo.BuildAttribute">
+		SELECT
+			eat.*,
+			eaa.*
+		FROM
+			comm_build eat
+		LEFT JOIN comm_build_attribute eaa ON eat.id = eaa.build_id
+		WHERE
+			eat.active = 1
+		AND eat.id = #{id,jdbcType=VARCHAR}
+    </select>  
+    <insert id="insertBuild">
+    	<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+			SELECT LAST_INSERT_ID() AS ID    
+   		</selectKey>
+		INSERT INTO comm_build(`user_id`,`name`,parent_id,active,root_id,bloc_id,recordtime,project_id,backipsdata) values(#{user_id},#{name,jdbcType=VARCHAR},#{parent_id},1,#{root_id},#{bloc_id,jdbcType=VARCHAR},now(),#{project_id},#{backipsdata})
+    </insert>
+    <update id="updatetBuild"  parameterType="com.common.configmgr.pojo.BuildAttribute">
+		UPDATE  comm_build  SET  
+		<if test="name!=null and  ''!=name">
+		 `name`=#{name,jdbcType=VARCHAR},
+		</if>
+		<if test="user_id!=null and user_id>0">
+			user_id=#{user_id},
+		</if>
+		<if test="desc!=null and  ''!=desc">
+		 `desc`=#{desc,jdbcType=VARCHAR},
+		</if>
+		<if test="index_template_id!=null and  index_template_id>0">
+		`index_template_id`=#{index_template_id,jdbcType=VARCHAR},
+	</if>
+			`backipsdata`=#{backipsdata,jdbcType=VARCHAR},
+		<if test="pic!=null and  ''!=pic">
+		 `pic`=#{pic,jdbcType=VARCHAR},
+		</if>
+		<if test="project_id!=null and project_id>0">
+			project_id=#{project_id},
+		</if>
+		<if test="bloc_id>0">
+		 bloc_id=#{bloc_id,jdbcType=VARCHAR},
+		</if>
+		<if test="bloc_id==0">
+		 bloc_id=null,
+		</if>
+		hasChild=#{hasChild}  WHERE  ID=#{id}
+    </update>
+    <select id="getBuildNameByUserId" parameterType="int" resultType="java.lang.String">
+    	select cb.name from comm_build cb JOIN comm_user cu on cu.build_id=cb.id where cu.id=#{0}
+    </select>
+    <update id="updateBuildAttr" parameterType="com.common.configmgr.pojo.BuAttr">
+    	UPDATE  comm_build_attribute SET
+		<if test="coordinate!=null and coordinate!=''">
+			coordinate=#{coordinate},
+		</if>
+    	<if test="inner_code!=null and  ''!=inner_code">
+		 `inner_code`=#{inner_code},
+		</if>
+		<if test="location!=null and  ''!=location">
+		 `location`=#{location},
+		</if>
+		
+		<if test="area!=null and  ''!=area">
+		 `area`=#{area},
+		</if>
+		
+		<if test="study_area!=null and  ''!=study_area">
+		 `study_area`=#{study_area},
+		</if>
+		
+		<if test="pic!=null and  ''!=pic">
+		 `pic`=#{pic},
+		</if>
+		<if test="ktarea!=null and  ktarea>0">
+			`ktarea`=#{ktarea},
+		</if>
+		<if test="capacity!=null and capacity>0">
+			capacity=#{capacity}
+		</if>
+		<if test="structure!=null and  ''!=structure">
+		 `structure`=#{structure},
+		</if>
+		<if test="numberpeople > 0">
+			numberpeople = #{numberpeople},
+		</if>
+		WHERE  ID=#{id}
+    </update>
+    
+    <update id="updatethasChild"  parameterType="com.common.configmgr.pojo.BuildAttribute">
+		UPDATE  comm_build  SET hasChild=#{hasChild}  WHERE  ID=#{id}
+    </update>
+    
+    <delete id="delBuild"  parameterType="com.common.configmgr.pojo.Build">
+		delete comm_build from comm_build where id in
+		<foreach item="idItem" collection="array" open="(" separator="," close=")">
+			#{idItem}
+		</foreach>
+    </delete>
+    
+    <!-- 根据id批量查询单位信息  start-->
+    <select id="getListByid"  resultType="com.common.configmgr.pojo.Build">
+		SELECT ID,`name`,`desc`,pic,parent_id,hasChild,isactivate FROM comm_build where id in 
+		<foreach item="item" index="index" collection="list"  open="(" separator="," close=")">
+           #{item}
+        </foreach>
+    </select>  
+    <!-- 根据id批量查询单位信息  end-->
+    
+    <!-- 插入comm_build_attribute -->
+     <insert id="insertBuildAttribute" parameterType="com.common.configmgr.pojo.BuildAttribute">
+		INSERT INTO	comm_build_attribute(coordinate,`ktarea`,`inner_code`,completed_date,area,study_area,pic,build_id,structure,location)
+		values(#{coordinate},#{ktarea},#{inner_code,jdbcType=VARCHAR},#{completed_date,jdbcType=DATE},#{area},#{study_area},#{pic,jdbcType=VARCHAR},#{build_id},#{structure,jdbcType=VARCHAR},#{location,jdbcType=VARCHAR})
+    </insert>
+    <!-- 插入comm_build_attribute  end -->
+    <update id="updatetBuildAttribute"  parameterType="com.common.configmgr.pojo.BuildAttribute">
+		UPDATE  comm_build_attribute
+			set coordinate=#{coordinate},
+			`ktarea`=#{ktarea},
+			inner_code=#{inner_code,jdbcType=VARCHAR},
+			completed_date=#{completed_date,jdbcType=DATE},
+			area=#{area},study_area=#{study_area},
+			pic=#{pic,jdbcType=VARCHAR},
+			structure=#{structure,jdbcType=VARCHAR},
+			location=#{location,jdbcType=VARCHAR},
+			numberpeople = #{numberpeople},
+			zgypdgsl = #{zgypdgsl},
+			mainsum = #{mainsum},
+			capacity = #{capacity},
+			voltagelevel = #{voltagelevel},
+			location = #{location},
+			structure = #{structure},
+			dypdgsl = #{dypdgsl}
+			WHERE  build_id=#{build_id}
+    </update>
+
+    <delete id="delBuildAttribute"  parameterType="com.common.configmgr.pojo.Build">
+			delete comm_build_attribute from comm_build_attribute where build_id in
+			<foreach item="idItem" collection="array" open="(" separator="," close=")">
+			#{idItem}
+		</foreach>
+    </delete>
+    
+    <select id="getUserBulid" resultType="com.common.configmgr.pojo.Build" parameterType="com.common.configmgr.pojo.Build">
+    	select cd.*,cda.build_id from comm_bloc cb,comm_user cu ,comm_build cd ,comm_build_attribute cda where cu.bloc_id = cb.id and cd.bloc_id = cb.id AND cd.id = cda.build_id and cu.id = #{pid}
+    	<if test="hasChild==-1">
+			and cd.hasChild =0
+		</if>
+		<if test="bloc_id>0">
+		 	and cd.bloc_id = #{bloc_id} or cd.bloc_id is null
+		 </if>
+    </select>
+    
+     <select id="getBlocBuildList" resultType="com.common.configmgr.pojo.Build" parameterType="int">
+    		select * from comm_build WHERE bloc_id = #{id}
+    </select>
+    
+    <!-- 根据集团id查询建筑 返回vo类 -->
+    <select id="getBuildVoList" parameterType="int" resultType="com.common.configmgr.vo.BuildVo">
+    	select cb.`name` blocname,cd.* from comm_bloc cb, comm_build cd WHERE cd.bloc_id = cb.id and cb.id = #{id}
+    </select>
+	<!-- 根据建筑id去查询名称 -->
+    <select id="getBuildidByname" resultType="com.common.configmgr.pojo.Build" >
+    	select id, name from comm_build where 1=1
+    	<if test="id!=null and id>0">
+    		and id=#{id}
+    	</if>
+    	<if test="name!=null">
+    		and name=#{name}
+    	</if>
+    </select>
+
+	<!--根据项目id获取-->
+	<select id="getProjectList" parameterType="int" resultType="com.common.configmgr.pojo.Build">
+		SELECT * FROM `comm_build` where project_id = #{id};
+	</select>
+
+	<select id="getBuildAttrbuteList" resultType="com.common.configmgr.pojo.BuildAttribute">
+		select cb.*,cda.area,cda.numberpeople,cda.ktarea from comm_build cb,comm_build_attribute cda WHERE cb.id = cda.build_id
+	</select>
+
+	<select id="getbuildin" resultType="com.common.configmgr.pojo.Build">
+		SELECT * FROM comm_build where id in
+			<foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+				#{item.build_id}
+			</foreach>
+
+	</select>
+</mapper> 

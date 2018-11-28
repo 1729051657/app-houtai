@@ -1,5 +1,10 @@
 package com.app.energyconsumptionmanagement.bean;
 
+/**
+ * 
+ * @author liyao
+ * 设备实体
+ */
 public class Device {
 
 	private int qywx_user_id;
@@ -23,6 +28,25 @@ public class Device {
 	private Float rate;//倍率
 	
 	private int intelligent;//是否自动读取数据
+
+	private int is_virtual;
+	private String imgurl;
+
+	public String getImgurl() {
+		return imgurl;
+	}
+
+	public void setImgurl(String imgurl) {
+		this.imgurl = imgurl;
+	}
+
+	public int getIs_virtual() {
+		return is_virtual;
+	}
+
+	public void setIs_virtual(int is_virtual) {
+		this.is_virtual = is_virtual;
+	}
 
 	public int getQywx_user_id() {
 		return qywx_user_id;
@@ -129,16 +153,10 @@ public class Device {
 
 	}
 
-	public Device(String buildname, int root_id, String name, String desc, int area_id, int category_type_id, int emengry_id, int level, int area_rootid) {
-		this.buildname = buildname;
-		this.root_id = root_id;
+	public Device(String name, int bloc_id, int comm_build) {
 		this.name = name;
-		this.desc = desc;
-		this.area_id = area_id;
-		this.category_type_id = category_type_id;
-		this.emengry_id = emengry_id;
-		this.level = level;
-		this.area_rootid = area_rootid;
+		this.bloc_id = bloc_id;
+		this.comm_build = comm_build;
 	}
 
 	public Device(int bloc_id) {

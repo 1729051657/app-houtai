@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper 
+       PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+       "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="userMapper">
+
+	<select id="getUserDevice" resultMap="getUserDeviceResult" parameterType="com.common.user.vo.UserDevice">
+        SELECT
+        ud.*,
+		cd.name,
+        cd.desc,
+        cd.root_id,
+        cd.parent_id,
+        cd.id deviceid
+        FROM
+        qywx_bill_user_device ud
+       INNER JOIN comm_device cd ON cd.`NAME` = ud.devicename where 1=1
+		<if test="qywx_user_id!=null and qywx_user_id>0">
+			and qywx_user_id=#{qywx_user_id}
+		</if>
+		<if test="user_id!=null and user_id>0">
+			and user_id=#{user_id}
+		</if>
+	</select>
+	<resultMap id="getUserDeviceResult" type="com.common.user.vo.UserDevice">
+		<id column="qywx_user_id" jdbcType="INTEGER" property="qywx_user_id"/>
+		<result column="bulid_id" property="bulid_id"/>
+		<result column="user_id" property="user_id"/>
+		<collection  property="devicelist" ofType="com.nysys.configmgr.pojo.Device" column="qywx_user_id">
+			<id column="deviceid"  property="deviceid"/>
+			<result column="name" property="name"/>
+			<result column="root_id" property="root_id"/>
+			<result column="parent_id" property="parent_id"/>
+			<result column="desc" property="desc"/>
+		</collection>
+	</resultMap>
+	<insert id="addUserDevice" parameterType="com.common.user.vo.UserDevice">
+		INSERT into qywx_bill_user_device(user_id,qywx_user_id,build_id,devicename,recordtime)
+		VALUES
+		<foreach item="devicelist" collection="devicelist" separator="," >
+			(
+			#{user_id},
+			#{qywx_user_id},
+			#{build_id},
+			#{devicelist.name},
+			now()
+			)
+		</foreach>
+	</insert>
+	<delete id="delUserDevice" parameterType="com.common.user.vo.UserDevice">
+		DELETE qywx_bill_user_device FROM qywx_bill_user_device where 1=1
+		<if test="qywx_user_id!=null and qywx_user_id>0">
+			and qywx_user_id=#{qywx_user_id}
+		</if>
+		<if test="user_id!=null and user_id>0">
+			and user_id=#{user_id}
+		</if>
+	</delete>
+
+	<select id="getbinduser" resultType="com.common.user.vo.BindUser" parameterType="com.common.user.vo.User">
+		SELECT
+			qu.*,
+			cb.name build_name,
+			cbl.name bloc_name,
+            cr.rolename role_name,
+            cr.id role_id
+		FROM
+			qywx_user qu
+			LEFT JOIN comm_build cb ON cb.id = qu.build_id
+			LEFT JOIN comm_bloc cbl ON cbl.id = qu.bloc_id
+			Left join comm_role cr on cr.id=qu.role_id
+		where 1=1
+		<if test="type!=-1">
+			<if test="build_id!=null and build_id>0">
+				and cb.id=#{build_id}
+			</if>
+			<if test="bloc_id!=null and bloc_id>0">
+				and cbl.id=#{bloc_id}
+			</if>
+		</if>
+	</select>
+	<update id="updbinduser" parameterType="com.common.user.vo.BindUser">
+		update qywx_user set type=#{type},build_id=#{build_id},bloc_id=#{bloc_id},username=#{username},role_id=#{role_id},active=#{active},createtime=now()
+		where id=#{id}
+	</update>
+	<insert id="addbinduser" parameterType="com.common.user.vo.BindUser">
+		insert into qywx_user(type,build_id,bloc_id,username,active,role_id,createtime)
+		values(#{type},#{build_id},#{bloc_id},#{username},#{active},#{role_id},now())
+	</insert>
+	<delete id="delbinduser" parameterType="int">
+		delete qywx_user from qywx_user where id=#{id}
+	</delete>
+    <select id="getUser"  resultType="com.common.user.vo.User">
+		select * from comm_user  where username=#{userName,jdbcType=VARCHAR}
+		<!-- SELECT u.id,u.username,u.password ,u.createtime,u.bloc_id,u.active,ur.roleid,u.build_id ,u.type
+		FROM comm_user u JOIN comm_user_role ur ON u.id = ur.userid where username=#{userName,jdbcType=VARCHAR} and u.active>0
+		 -->
+    </select>
+	<select id="getUserById"  resultType="com.common.user.vo.User">
+		select * from comm_user  where `id`=#{id}
+	</select>
+
+	<select id="getMenu"   resultType="com.common.user.vo.Menu">
+		select * from comm_menu where active=1  order by show_order,id
+    </select>
+
+	<select id="getuserbybuild" parameterType="int" resultType="com.common.user.vo.User">
+		select * from comm_user where build_id = #{build_id} and type=1
+	</select>
+
+    <select id="getUserMenu" parameterType="com.common.user.vo.User"  resultType="com.common.user.vo.Menu">
+		select em.* from comm_menu em,comm_role_menu erm,comm_user_role eur where eur.roleid=erm.roleid and erm.menuid=em.id and em.active=1 and eur.userid=#{id} order by em.show_order,em.id
+    </select>
+    
+    <select id="getUserList" resultType="com.common.user.vo.User">
+		SELECT
+			eu.*, bc.`name`,
+			cd.`name` buildname,
+			er.rolename
+		FROM
+			comm_user eu
+		LEFT JOIN comm_user_role eur ON eu.id = eur.userid
+		LEFT JOIN comm_role er ON eur.roleid = er.id
+		LEFT JOIN comm_bloc bc ON eu.bloc_id = bc.id
+		LEFT JOIN comm_build cd ON eu.build_id = cd.id
+		WHERE
+			eu.type != 2
+    </select>
+    
+    <select id="getUserFenxiList"  resultType="com.common.user.vo.User">
+    	SELECT
+			eu.*, bc.`name`,
+			cd.`name` buildname,
+			er.rolename
+		FROM
+			comm_user eu
+		LEFT JOIN comm_user_role eur ON eu.id = eur.userid
+		LEFT JOIN comm_role er ON eur.roleid = er.id
+		LEFT JOIN comm_bloc bc ON eu.bloc_id = bc.id
+		LEFT JOIN comm_build cd ON eu.build_id = cd.id
+		WHERE
+			eu.type = 2
+    </select>
+    
+    <update id="updateactive" parameterType="com.common.user.vo.User">
+    	update comm_user set active=#{active} where id=#{id}
+    </update>
+
+	<update id="updatepwd" parameterType="com.common.user.vo.User">
+    	update comm_user set password=#{passWord,jdbcType=VARCHAR} where id=#{id}
+    </update>
+    
+    <select id="getRolelist"   resultType="com.common.user.vo.Role">
+		select * from comm_role where systype=#{systype}
+    </select>
+    <select id="menuallot"  parameterType="int"  resultType="com.common.user.vo.Role">
+		select em.* from comm_menu em,comm_role_menu erm where erm.menuid=em.id and em.active=1 and erm.roleid=#{id} order by em.show_order,em.id
+    </select>
+    <delete id="delrolemenu" parameterType="com.common.user.vo.RoleMenu">
+    	delete comm_role_menu from comm_role_menu where roleid=#{roleid}
+    </delete>
+    <select id="addrolemenu" parameterType="java.util.List">
+    	insert into comm_role_menu(roleid,menuid) values
+    	<foreach collection="list" item="item" index="index" separator=",">
+    		(#{item.roleid},#{item.menuid})
+		</foreach>
+    </select>
+    <insert id="addrole" parameterType="com.common.user.vo.Role">
+    	insert into comm_role(rolename,type) values(#{rolename,jdbcType=VARCHAR},#{type})
+    </insert>
+    <!-- 添加用户 -->
+    <insert id="adduser" parameterType="com.common.user.vo.User">
+     <selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+		SELECT LAST_INSERT_ID() AS ID    
+    </selectKey>
+    	insert into comm_user(username,password,createtime,bloc_id,build_id,type,active) values(#{userName,jdbcType=VARCHAR},#{passWord,jdbcType=VARCHAR},now(),#{bloc_id,jdbcType=VARCHAR},#{build_id},#{type},1)
+	</insert>
+    <insert id="adduserrole" parameterType="com.common.user.vo.User">
+    	insert into comm_user_role(userid,roleid) values(#{id},#{roleid})
+    </insert>
+    
+     <select id="qryMenubyid" resultType="com.common.user.vo.Menu" parameterType="com.common.user.vo.Menu">
+		select * from comm_menu where `id`=#{id,jdbcType=VARCHAR} 
+    </select>
+    <select id="getMenuList"   resultType="com.common.user.vo.Menu">
+		select * from comm_menu where active=1  order by id
+    </select>
+    
+     <insert id="addmenu" parameterType="com.common.user.vo.Menu">
+    	insert into comm_menu(parentid,`name`,`url`,idname,icon,isshow,show_order,qpp,level,systype) values(#{parentid},#{name,jdbcType=VARCHAR},#{url,jdbcType=VARCHAR},#{idname,jdbcType=VARCHAR},#{icon,jdbcType=VARCHAR},#{isshow},#{show_order,jdbcType=VARCHAR},#{qpp},#{level},#{systype})
+    </insert>
+     <update id="updatemenu" parameterType="com.common.user.vo.Menu">
+		update comm_menu set parentid=#{parentid},`name`=#{name,jdbcType=VARCHAR},idname=#{idname,jdbcType=VARCHAR},`url`=#{url,jdbcType=VARCHAR},icon=#{icon,jdbcType=VARCHAR},show_order=#{show_order,jdbcType=VARCHAR},isshow=#{isshow},qpp=#{qpp} where `id`=#{id}
+    </update>
+    <delete id="delmenu" parameterType="com.common.user.vo.Menu">
+       delete comm_menu from comm_menu where `id`=#{id}
+    </delete>
+    
+    <select id="getUserRole" parameterType="com.common.user.vo.User" resultType="com.common.user.vo.User">
+    	select * from comm_user cu , comm_role cr , comm_user_role cur WHERE cu.id = cur.userid AND cur.roleid = cr.id AND cu.id = #{id}
+    </select>
+    
+    <select id="getRole" resultType="com.common.user.vo.User">
+    	SELECT * FROM comm_role WHERE id = #{id}
+    </select>
+    
+    <insert id="addAreaUser" parameterType="com.common.user.vo.SysAreaUser">
+    	INSERT INTO comm_sys_area_user (
+			`user_id`,
+			`build_id`,
+			`recordtime`
+		)
+		VALUES
+			(
+				#{user_id},#{build_id},now()
+			)
+    </insert>
+    
+    <delete id="delAreaUser" parameterType="int">
+    	delete from comm_sys_area_user where user_id = #{id}
+    </delete>
+    
+    <!-- 查询区域客户关联表 -->
+    <select id="getSysAreaUser" resultType="com.common.user.vo.SysAreaUser" parameterType="com.common.user.vo.SysAreaUser">
+    	SELECT
+			csau.*,
+			cd.`name` buildname
+		FROM
+			comm_sys_area_user csau
+		LEFT JOIN comm_build cd ON cd.id = csau.build_id
+		<if test="id!=null and id>0">
+			where csau.user_id=#{id}
+		</if>
+    </select>
+
+    <select id="getUserBuild" resultType="string"  parameterType="int">
+    	SELECT build_id FROM `comm_sys_area_user` WHERE user_id=#{id}
+    </select>
+    
+    <select id="getJsonMenu" resultType="com.common.user.vo.MenuVo" parameterType="com.common.user.vo.User">
+    	SELECT
+			em.`name`,
+			em.url path,
+			CONCAT('..',em.url) component
+		FROM
+			comm_menu em,
+			comm_role_menu erm,
+			comm_user_role eur
+		WHERE
+			eur.roleid = erm.roleid
+		AND erm.menuid = em.id
+		AND em.active = 1
+		AND eur.userid = #{id}
+		AND (em.url != '/' AND em.url != '#')
+    </select>
+
+    <!-- 根据用户id查询登录配置表 -->
+    <select id="getLoginConfigByUserid" resultType="com.common.user.pojo.LoginConfig">
+    	select * from comm_login_config where login_id=#{login_id}
+    </select>
+
+	<update id="updateUser" parameterType="com.common.user.vo.User">
+		UPDATE  comm_user set `username` = #{userName},`password` = #{passWord},`type`=#{type},`bloc_id`=#{bloc_id},`build_id`=#{build_id} where id = #{id}
+	</update>
+
+	<update id="updateUserRole" parameterType="com.common.user.vo.User">
+		UPDATE comm_user_role set `roleid` = #{roleid} where userid = #{id}
+	</update>
+
+	<select id="getUserbuilds" parameterType="int" resultType="com.common.user.vo.SysAreaUser">
+		SELECT * FROM `comm_sys_area_user` WHERE user_id = #{id};
+	</select>
+</mapper> 

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+       PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+       "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="billDeviceMapper">
+	<resultMap id="resultMap" type="com.nysys.billreport.vo.BillGroupVo">
+		<id column="id" property="id"/>
+		<result column="bloc_id" property="bloc_id"/>
+		<result column="build_id" property="build_id"/>
+		<result column="type" property="type"/>
+		<result column="name" property="name"/>
+		<result column="emengry_id" property="emengry_id"/>
+		<collection property="billGroupPointList" ofType="com.nysys.billreport.pojo.BillGroupPoint">
+			<id column="did" property="id"/>
+			<result column="combine_name" property="combine_name"/>
+			<result property="desc" column="desc"/>
+			<result column="inner_id" property="inner_id"/>
+			<result column="remark" property="remark"/>
+			<result column="hostval" property="hostval"/>
+		</collection>
+	</resultMap>
+	<select id="getBillGroup" parameterType="java.util.Map" resultMap="resultMap">
+		SELECT
+		cbg.*,
+		cbgp.id did,
+		cbgp.combine_name,
+		cd.inner_id,
+		cd.`desc`,
+		cbgp.hostval,
+		cbgp.remark
+		FROM
+		comm_bill_group cbg
+		LEFT JOIN comm_bill_group_point cbgp ON cbg.id = cbgp.bill_group_id
+		LEFT join comm_device cd on cd.name=cbgp.combine_name
+		WHERE
+		build_id = #{build_id}
+		and type=#{type}
+	</select>
+	<update id="updBillGroupPoint" parameterType="com.nysys.billreport.pojo.BillGroupPoint">
+		update comm_bill_group_point set hostval=#{hostval} where combine_name=#{combine_name}
+	</update>
+</mapper>

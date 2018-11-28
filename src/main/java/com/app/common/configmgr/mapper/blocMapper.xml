@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+       PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+       "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="blocMapper">
+ 	<select id="getBlocList" resultType="com.common.configmgr.pojo.Bloc">
+ 		SELECT * FROM comm_bloc
+ 	</select>	
+ 	<select id="getBlocByName" resultType="com.common.configmgr.pojo.Bloc" parameterType="com.common.configmgr.pojo.Bloc">
+ 		select * from comm_bloc where name=#{name}
+ 	</select>
+ 	<select id="qrybloccfg" resultType="com.common.configmgr.pojo.Bloc">
+ 		SELECT * FROM comm_bloc where id=#{id,jdbcType=VARCHAR}
+ 	</select>
+ 	<insert id="insertBloccfg">
+ 		<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+		SELECT LAST_INSERT_ID() AS ID    
+    	</selectKey>
+ 		INSERT INTO	comm_bloc(name,imgurl,aliasName,address,phone,introduce,recordtime) values(#{name,jdbcType=VARCHAR},#{imgurl,jdbcType=VARCHAR}
+		,#{aliasName,jdbcType=VARCHAR},#{address,jdbcType=VARCHAR},#{phone,jdbcType=VARCHAR},#{introduce},now())
+ 	</insert>
+ 	<update id="updateBloccfg" parameterType="java.lang.Integer" >
+ 		UPDATE  comm_bloc  SET  name=#{name,jdbcType=VARCHAR},aliasName=#{aliasName,jdbcType=VARCHAR},imgurl=#{imgurl,jdbcType=VARCHAR},address=#{address,jdbcType=VARCHAR},
+ 		introduce=#{introduce},phone=#{phone,jdbcType=VARCHAR},recordtime=now()  WHERE  ID=#{id}
+ 	</update>
+ 	<delete id="delBloccfg" parameterType="com.common.configmgr.pojo.Bloc">
+ 		DELETE from comm_bloc where id=#{id}
+ 	</delete>
+ 	<select id="getUserBlocLiset" resultType="com.common.configmgr.pojo.Bloc" parameterType="com.common.user.vo.User">
+ 		select cb.* from comm_bloc cb,comm_user cu where cu.bloc_id = cb.id and cu.id = #{id}
+ 	</select>
+ 	<select id="checkName" resultType="java.lang.Integer" parameterType="com.common.configmgr.pojo.Bloc">
+ 		SELECT count(id) FROM `comm_bloc` where 1=1 
+ 		<if test="name!=null">
+ 			and name=#{name}
+ 		</if>
+ 		<if test="aliasName!=null">
+ 			and aliasName=#{aliasName}
+ 		</if>
+ 	</select>
+ 	
+ 	<select id="getBlocAttributeVoList" resultType="com.common.configmgr.vo.BlocAttributeVo">
+ 		select *,cba.id bid from comm_bloc cb LEFT JOIN comm_bloc_attribute cba ON cb.id = cba.bloc_id
+ 	</select>
+ 	
+ 	<insert id="insertBlocAttribute" parameterType="com.common.configmgr.vo.BlocAttributeVo">
+ 		insert into comm_bloc_attribute(bloc_id,location,voltagelevel,capacity,mainsum,zgypdgsl,dypdgsl,starttime)values(#{bloc_id},#{location},#{voltagelevel},#{capacity},#{mainsum},#{zgypdgsl},#{dypdgsl},#{starttime})
+ 	</insert>
+ 	
+ 	<select id="getBlocAttributeVoById" resultType="com.common.configmgr.vo.BlocAttributeVo" parameterType="int">
+ 		select *,cba.id bid from comm_bloc cb LEFT JOIN comm_bloc_attribute cba ON cb.id = cba.bloc_id WHERE cb.id = #{id}
+ 	</select>
+ 	
+ 	<update id="updateBlocAttributeVo" parameterType="com.common.configmgr.vo.BlocAttributeVo">
+ 		update comm_bloc_attribute SET location = #{location},voltagelevel = #{voltagelevel},capacity=#{capacity},mainsum = #{mainsum},zgypdgsl = #{zgypdgsl},dypdgsl = #{dypdgsl},starttime = #{starttime} where id = #{bid}
+ 	</update>
+ 	
+ 	<delete id="delBlocAttributeVo" parameterType="com.common.configmgr.vo.BlocAttributeVo">
+ 		DELETE from comm_bloc_attribute where id=#{bid}
+ 	</delete>
+ </mapper>
