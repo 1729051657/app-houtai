@@ -16,13 +16,11 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private BaseDao baseDao;
 
-    public User getUser(String username) {
-		return baseDao.get("userMapper.getUser",username);
+	@Override
+	public User getUser(User user) {
+		return baseDao.get("userMapper.getUser",user);
 	}
-	public User getUserById(int id){
-		return baseDao.get("userMapper.getUserById",id);
-	}
-
+	@Override
 	public List<Menu> getUserMenu(User user){
 		return baseDao.getList("userMapper.getUserMenu",user);
 	}
